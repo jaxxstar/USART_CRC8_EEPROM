@@ -1,5 +1,3 @@
-//#define F_CPU 16000000UL // Defining the CPU Frequency
-
 #include <avr/io.h>      // Contains all the I/O Register Macros
 #include <util/delay.h>  // Generates a Blocking Delay
 
@@ -66,16 +64,17 @@ void USART_TransmitPolling(uint8_t dataByte)
 
 uint8_t USART_ReceivePolling()
 {
-  uint8_t dataByte, crcByte;
+  uint8_t dataByte;
+// uint8_t crcByte;
   char err = 0x00;
   while (( UCSR0A & (1<<RXC0)) == 0) {}; // Do nothing until data have been received
   dataByte = UDR0 ;
-  crcByte = dataByte;
-//  err = crc_8(crcByte,(sizeof(crcByte)*8));
-  if( err != 0x00)
-  {
-    USART_TransmitPolling('+');
-  }
+// crcByte = dataByte;
+//  err = crc_8(crcByte,(sizeof(crcByte)*8));   //CRC8 Implementation not completed yet
+// if( err != 0x00)
+// {
+//   USART_TransmitPolling('+');
+// }
   return dataByte;
 }
 
@@ -113,11 +112,11 @@ int main()
   USART_Init();
   while(1)
   {
-    localData = USART_ReceivePolling();
-    EEPROM_write(i, localData);
-    transmitData=EEPROM_read(i);
-    if(transmitData!='*')
-    USART_TransmitPolling(transmitData);
+    localData = USART_ReceivePolling();   //To listen to the data transmitted
+    EEPROM_write(i, localData);           //Writing to EEPROM
+    transmitData=EEPROM_read(i);          
+    if(transmitData!='*')                 //Using '*' as the delimiter for the string (To notify completion of sending data from the PC)
+    USART_TransmitPolling(transmitData);  //Sending EEPROM data when reception is completed
     i++;
   }
   return 0;
